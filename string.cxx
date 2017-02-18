@@ -63,6 +63,7 @@ public:
     String& insert (size_t pos, const char* s);
     String& insert (size_t pos, const char* s, size_t n);
     String& insert (size_t pos, size_t n, char c);
+    String& erase(size_t pos, size_t len);
 
     static void test();
 
@@ -383,21 +384,65 @@ String& String::insert(size_t pos, const String& str, size_t subpos, size_t subl
     _sz += sublen;
     return *this;
 }
-String& String::insert (size_t pos, const char* s)
+
+String& String::insert(size_t pos, const char* s)
 {
+    if (pos >= _sz)
+        throw std::out_of_range("String::insert");
     size_t len = strlen(s);
-    if (pos + len > MAX_SIZE)
+    if (_sz + len > MAX_SIZE)
         throw std::length_error("String::insert");
+    _reserve(_sz + len);
+    memcpy(_data + pos + len, _data + pos, _sz - pos);
+    memcpy(_data + pos, s, len);
+    _sz += len;
+    return *this;
 }
-/*
-String& insert (size_t pos, const char* s, size_t n);
-String& insert (size_t pos, size_t n, char c);
-*/
+
+String& String::insert(size_t pos, const char* s, size_t n)
+{
+    if (pos >= _sz)
+        throw std::out_of_range("String::insert");
+    if (_sz + n > MAX_SIZE)
+        throw std::length_error("String::insert");
+    _reserve(_sz + n);
+    memcpy(_data + pos + n, _data + pos, _sz - pos);
+    memcpy(_data + pos, s, n);
+    _sz += n;
+    return *this;
+}
+
+String& String::insert(size_t pos, size_t n, char c)
+{
+    if (pos >= _sz)
+        throw std::out_of_range("String::insert");
+    if (_sz + n > MAX_SIZE)
+        throw std::length_error("String::insert");
+    _reserve(_sz + n);
+    memcpy(_data + pos + n, _data + pos, _sz - pos);
+    memset(_data + pos, c, n);
+    _sz += n;
+    return *this;
+}
+
+String& String::erase(size_t pos = 0, size_t len = npos)
+{
+    if (pos >= _sz)
+        throw std::out_of_range("String::erase");
+    len = std::min(len, _sz - pos);
+    for (size_t i = 0; i < _sz - pos - len; i++)    // two sections may overlap, therefore cannot use memcpy.
+        _data[pos + i] = _data[pos + len + i];
+    memset(_data + _sz - len, 0, len);
+    _sz -= len;
+    _shrink();
+    return *this;
+}
+
 void String::test()
 {
     String a = "123456";
-    String b = "654321";
-    a.insert(3, b, 2, 3);
+    a.insert(3, 3, '-');
+    a.erase(3, 1);
     printf("%s\n", a.c_str());
 }
 
