@@ -21,7 +21,6 @@ public:
     // range constructor
     ~String() { delete[] _data; }
     // c-style String
-    const char* c_str();
 
     // assignment operator
     String& operator=(const String& str);
@@ -64,6 +63,14 @@ public:
     String& insert (size_t pos, const char* s, size_t n);
     String& insert (size_t pos, size_t n, char c);
     String& erase(size_t pos, size_t len);
+    // replace() too familiar with above, come back later when boring.
+    friend void swap(String& a, String& b);
+    void swap(String& str);
+
+    // string operations
+    const char* c_str() const;    // guarantees that string terminates with a null character.
+    const char* data() const;     // may not terminate with a null character.
+
 
     static void test();
 
@@ -95,7 +102,7 @@ protected:
             _data = newData;
         }
     }
-    void _alloc(size_t n) // doesn't reserve content in data.
+    void _alloc(size_t n)   // doesn't reserve content in data.
     {
         if (n >= _cap) {
             _cap = (n + 1) | ALLOC_MASK;
@@ -167,8 +174,6 @@ String::String(size_t n, char c)
     _sz      = n;
     memset(_data, c, _sz);
 }
-
-const char* String::c_str() { return _data; }
 
 String& String::operator=(const String& str)
 {
@@ -438,13 +443,39 @@ String& String::erase(size_t pos = 0, size_t len = npos)
     return *this;
 }
 
+void swap(String& a, String& b)
+{
+    using std::swap;
+    swap(a._sz, b._sz);
+    swap(a._data, b._data);
+    swap(a._cap, b._cap);
+    a._min_cap = b._min_cap = String::ALLOC_MASK;
+}
+
+void String::swap(String& str)
+{
+    ::swap(*this, str);
+}
+
 void String::test()
 {
-    String a = "123456";
-    a.insert(3, 3, '-');
-    a.erase(3, 1);
-    printf("%s\n", a.c_str());
+    String a = "123456", b;
+    ::swap(a, b);
+    printf("%s\n", b.c_str());
 }
+
+const char* String::c_str() const
+{
+    _data[_sz] = '\0';
+    return _data;
+}
+
+const char* String::data() const
+{
+    return _data;
+}
+
+
 
 int main()
 {
